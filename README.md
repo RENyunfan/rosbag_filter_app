@@ -1,59 +1,119 @@
+# ROS Bag Filter
 
-# ROS Bag Filter App
-
-This Python script provides a graphical user interface (GUI) application for filtering ROS bag files using `tkinter`. It allows users to easily specify input and output bag files, configure time modes, and filter topics based on time intervals. With this tool, working with ROS bag files becomes more intuitive, eliminating the need to use the command line.
+Unified ROS1 and ROS2 bag filtering with one Python package, one CLI, and one Tk GUI.
 
 ## Features
-- **Input and Output Bag File Selection**: Easily browse and select your input and output ROS bag files.
-- **Time Mode Selection**: Choose between ROS time and relative time modes for precise filtering.
-- **Topic Filtering**: Filter specific topics from the ROS bag file with ease.
-- **Time Interval Filtering**: Filter messages based on a defined time range.
-- **User-Friendly GUI**: Intuitive interface built with `tkinter` for a smooth user experience.
+- ROS1 `.bag` and ROS2 `rosbag2` directory support from the same codebase
+- Topic whitelist filtering
+- Absolute ROS-time or relative-time windows
+- Optional PointCloud2 spatial filter with independent `x/y/z` min/max bounds
+- Background GUI execution with progress logging and cancellation
+- PyPI-ready packaging with `rosbag-filter` and `rosbag-filter-app` entry points
 
-## Usage
+## Install
 
-### 1) Use the Pre-Built, Dependency-Free App (Tested on Ubuntu 20.04)
-Download and run the app directly from the release page:
+Python 3.8+ is supported.
+
 ```bash
-# Install curl if not already installed
-sudo apt-get install curl 
-
-# Download the app
-curl -L -o rosbag_filter_app https://github.com/RENyunfan/rosbag_filter_app/releases/download/v0.1/rosbag_filter_app
-
-# Make the app executable
-sudo chmod +x rosbag_filter_app
-
-# Run the app
-./rosbag_filter_app
+pip install "rosbag-filter[gui]"
 ```
 
-### 2) Run the Source Code
-If you prefer to run the source code directly:
+`tkinter` is a system dependency on Linux. On Ubuntu:
+
 ```bash
-# Install necessary dependencies
 sudo apt-get install python3-tk
-pip3 install bagpy
-
-# Run the application
-python3 rosbag_filter_app.py
 ```
 
-## Using the GUI
+## CLI
 
-![ROS Bag Filter App Interface](./misc/guide.png)
+Show help:
 
-1. **Select Input Bag File**: Click 'Browse' and choose the input bag file.
-2. **Select Output Bag File**: Click 'Browse' and specify the path for the output bag file.
-3. **Choose Time Mode**: Select between ROS time and relative time.
-   - **ROS Time Mode**: Input the UTC time.
-   - **Relative Time Mode**: Input the time in seconds relative to the start time.
-4. **Filter Topics**: Select the topics you wish to filter or retain.
-5. **Specify Time Interval**: Define the start and end times for filtering.
-6. **Start Filtering**: Click 'Start' to begin the filtering process. The filtered bag file will be saved to the specified output location.
+```bash
+rosbag-filter --help
+```
 
-## Contributing
-We welcome contributions! If you'd like to contribute, please fork the repository and submit a pull request with your proposed changes.
+Filter a ROS1 bag:
 
-## License
-This project is licensed under the MIT License
+```bash
+rosbag-filter \
+  --input /data/run.bag \
+  --output /data/run_filtered.bag \
+  --topics /imu,/tf \
+  --time-mode relative \
+  --start 5.0 \
+  --end 25.0
+```
+
+Filter a ROS2 bag and apply PointCloud2 bounds:
+
+```bash
+rosbag-filter \
+  --input /data/run_ros2 \
+  --output /data/run_ros2_filtered \
+  --topics /cloud_registered,/tf \
+  --time-mode ros \
+  --start 1710000000.0 \
+  --end 1710000030.0 \
+  --workers 8 \
+  --pc2-topic /cloud_registered \
+  --pc2-x-min -1.0 \
+  --pc2-x-max 2.0 \
+  --pc2-z-max 1.5
+```
+
+## GUI
+
+Launch the GUI:
+
+```bash
+rosbag-filter-app
+```
+
+The PointCloud2 controls are hidden in the `Advanced PointCloud2 Filter` panel by default. Expand the panel only when you want to enable spatial filtering and set `x/y/z` bounds.
+
+`rosbag-filter-gui` is also installed as a compatibility alias.
+
+For direct source usage, the legacy wrappers still work:
+
+```bash
+python3 rosbag_filter_app.py
+python3 rosbag2_filter_gui.py
+```
+
+## Development
+
+Install dev dependencies:
+
+```bash
+pip install -e ".[dev,gui]"
+```
+
+Run tests:
+
+```bash
+pytest
+```
+
+Build distributions:
+
+```bash
+python -m build
+python -m twine check dist/*
+```
+
+## Release
+
+The repository includes GitHub Actions workflows for CI, TestPyPI, and PyPI trusted publishing.
+
+Before the first release:
+
+1. Create the `rosbag-filter` project on TestPyPI.
+2. Create the `rosbag-filter` project on PyPI.
+3. Configure the `testpypi` and `pypi` GitHub environments.
+4. Add trusted publishing for this GitHub repository in both indexes.
+
+Suggested release flow:
+
+1. Run the TestPyPI workflow manually.
+2. Validate installation from TestPyPI in a clean environment.
+3. Push a version tag like `v0.2.0` to publish to PyPI.

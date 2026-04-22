@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rosbag-filter"
+version = "0.2.0"
+description = "Unified ROS1 and ROS2 bag filtering with CLI and Tk GUI."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [{ name = "Yunfan Ren" }]
+dependencies = [
+  "numpy>=1.21",
+  "rosbags==0.9.23",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+gui = ["sv-ttk>=2.6.0"]
+dev = [
+  "build>=1.2.1",
+  "pytest>=8.0",
+  "twine>=5.1",
+]
+
+[project.scripts]
+rosbag-filter = "rosbag_filter.cli:main"
+
+[project.gui-scripts]
+rosbag-filter-app = "rosbag_filter.gui:main"
+rosbag-filter-gui = "rosbag_filter.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/RENyunfan/rosbag_filter_app"
+Source = "https://github.com/RENyunfan/rosbag_filter_app"
+Issues = "https://github.com/RENyunfan/rosbag_filter_app/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

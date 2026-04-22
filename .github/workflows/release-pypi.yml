@@ -1,0 +1,32 @@
+name: Publish PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build distributions
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+      - name: Smoke test installed commands
+        run: |
+          python -m venv /tmp/rosbag-filter-smoke
+          /tmp/rosbag-filter-smoke/bin/python -m pip install --no-deps dist/*.whl
+          /tmp/rosbag-filter-smoke/bin/python -c "import importlib.metadata as m; eps = {ep.name: ep.value for ep in m.distribution('rosbag-filter').entry_points}; expected = {'rosbag-filter': 'rosbag_filter.cli:main', 'rosbag-filter-app': 'rosbag_filter.gui:main'}; missing = {name: value for name, value in expected.items() if eps.get(name) != value}; raise SystemExit(f'Missing entry points: {missing}') if missing else print('Entry points OK:', sorted(expected))"
+          test -x /tmp/rosbag-filter-smoke/bin/rosbag-filter-app
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
